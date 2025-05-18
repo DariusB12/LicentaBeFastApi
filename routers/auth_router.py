@@ -2,13 +2,15 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from api_responses.auth_response import AuthResponse
-from api_requests.login_request import LoginRequest
-from api_requests.signup_request import SignUpRequest
+from app_requests.auth_requests.login_request import LoginRequest
+from app_requests.auth_requests.signup_request import SignUpRequest
+from app_responses.auth_responses.auth_response import AuthResponse
 from fastapi import Depends
+from model.entities import User
+from security.jwt_token import verify_token
 
 from database_connection.database import get_db
-from service.auth_service import login, signup
+from service.auth_service import login, signup, delete
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -37,7 +39,7 @@ async def signup_api(body: SignUpRequest, db: Session = Depends(get_db)):
     Signup the user based on the provided credentials
     :param db: injecting the database dependency
     :param body: the body of the request
-    :return: none or throws:
+    :return: 200 OK HTTPResponse or throws:
     - HTTP 409 Conflict if an account already exists with the provided username
     - HTTP 422 Unprocessable Content if the credentials are invalid
     """
@@ -49,3 +51,24 @@ async def signup_api(body: SignUpRequest, db: Session = Depends(get_db)):
     )
 
     return JSONResponse(status_code=200, content=response.dict())
+
+
+@router.delete("/delete")
+async def delete_api(body: LoginRequest, db: Session = Depends(get_db), user: User = Depends(verify_token)):
+    """
+    Deletes the user based on the provided credentials
+    :param db: injecting the database dependency
+    :param body: the body of the request
+    :return: HTTP 200OK or throws:
+    - HTTP 400 BAD_REQUEST if the credentials are not valid or if the user doesn't exist
+    - HTTP 403 FORBIDDEN if the user token is invalid/expired (user must be logged in, in order to delete his account)
+    """
+    delete(body.username, body.password, db)
+
+    response = AuthResponse(
+        message="User Account Deleted successfully",
+        status_code=200
+    )
+
+    return JSONResponse(status_code=200, content=response.dict())
+

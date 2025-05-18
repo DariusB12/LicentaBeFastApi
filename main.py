@@ -1,14 +1,25 @@
 from exceptions.custom_exceptions import CustomHTTPException
-from model.user import User
-from routers import auth_router
+from model.entities import User
+from routers import auth_router, user_router, yolo_detection_router
 from security.jwt_token import verify_token
 from fastapi import FastAPI, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware  # Import CORSMiddleware
 
 
 app = FastAPI()
+# Allow all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 app.include_router(auth_router.router)
+app.include_router(user_router.router)
+app.include_router(yolo_detection_router.router)
 
 
 @app.exception_handler(CustomHTTPException)
@@ -45,8 +56,3 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         }
     )
 
-
-@app.get("/protected-data")
-def get_protected_data(user: User = Depends(verify_token)):
-    # Acces doar pentru utilizatori autentificați
-    return {"message": "Acces permis!", "user": user.username}

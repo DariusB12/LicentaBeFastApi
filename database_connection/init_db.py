@@ -1,5 +1,7 @@
 from .database import Base, engine
-from model.user import User  # IMPORT TOATE MODELELE
+# IMPORT TOATE MODELELE
+from model.entities import User, SocialMediaAccount, Comment, PostPhoto, Post
+
 
 # !!!!TREBUIE IMPORTATE TOATE MODELELE AICI PENTRU A FI CREATE IN BAZA DE DATE!!!!!
 

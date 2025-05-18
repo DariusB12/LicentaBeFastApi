@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session
 
 from exceptions.custom_exceptions import CustomHTTPException
-from repo.user_repo import get_user_by_username, create_user
+from repo.user_repo import get_user_by_username, create_user, delete_user
 from security.jwt_token import create_access_token
 from security.password_hash import verify_password, hash_password
 from fastapi import status
-from model.user import User
+from model.entities import User
 from validator.auth_validator import validate_signup
 
 
@@ -58,3 +58,23 @@ def signup(username: str, password: str, db: Session):
     # Creates a User object and saved it
     new_user = User(username=username, hashed_password=hashed_password)
     create_user(new_user, db)
+
+
+def delete(username: str, password: str, db: Session):
+    """
+    Deletes the user's account based on the provided credentials
+    :param db: the database connection
+    :param username: the username of the account to be deleted
+    :param password: the password of the account to be deleted
+    :return: none or throws
+    - HTTP 400 BAD_REQUEST if the credentials are not valid or if the user doesn't exist
+    """
+    # Verify if an account with this username exists
+    user = get_user_by_username(username, db)
+    if not user or not verify_password(password, user.hashed_password):
+        raise CustomHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message="Invalid credentials"
+        )
+
+    delete_user(user, db)

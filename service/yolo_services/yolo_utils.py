@@ -6,6 +6,15 @@ import cv2
 from exceptions.custom_exceptions import CustomHTTPException
 from service.yolo_services.emoji import EMOJI_REGEXP
 import fasttext
+from lingua import Language, LanguageDetectorBuilder
+
+COMMON_LANGUAGES = ['eng', 'fra', 'spa', 'deu', 'ita', 'ron', 'por']
+COMMON_LANGUAGES_LINGUA = [Language.ENGLISH, Language.FRENCH, Language.SPANISH, Language.GERMAN, Language.ITALIAN,
+                           Language.ROMANIAN, Language.PORTUGUESE]
+MAX_CHARACTERS_LENGTH_LINGUA = 50
+
+# CREATE THE LINGUA LANGUAGE DETECTOR
+detector = LanguageDetectorBuilder.from_languages(*COMMON_LANGUAGES_LINGUA).build()
 
 # LOAD THE LANGUAGE DETECTION MODEL lid218
 modelLID = fasttext.load_model(
@@ -14,9 +23,6 @@ modelLID = fasttext.load_model(
 NON_ALPHA_TOKEN_RE = re.compile(
     # using MULTILINE so that ^ means the beginning of a line
     r'(^|[\s\b])([^A-Za-z\n]+)([\s\b]|$)', re.MULTILINE)
-
-COMMON_LANGUAGES = ['eng', 'fra', 'spa', 'deu', 'ita', 'ron']
-
 
 
 def normalize_text(text):
@@ -53,6 +59,7 @@ def normalize_text(text):
 
     # Remove newline at the end of text, if it exists
     return text.rstrip('\n')
+
 
 def remove_emojis_from_text(text):
     return re.sub(EMOJI_REGEXP, '', text)
@@ -175,6 +182,7 @@ def base64_to_cv2_img(base64_str):
             message="Invalid base64 image format."
         )
 
+
 def languages_list_to_tesseract_lang(languages):
     """
     Converts a list of strings representing language names accepted by tesseract, into a single string
@@ -192,13 +200,13 @@ def languages_list_to_tesseract_lang(languages):
     return tesseract_lang
 
 
-def predict_text_language(text):
+def predict_text_language_fasttext_lid218(text):
     """
     Predicts the language of the given text, the languages predicted by the lid218 model are filtered, and the function
     extracts the first language detected with the highest probability, that is also included in the COMMON_LANGUAGES
     list, if no common language was detected, then english will be the default language returned
-    :param text:
-    :return:
+    :param text: the text from which we predict the language
+    :return: the predicted language
     """
     src_lang = 'eng'
     # LIST WITH ALL THE LANGUAGES SORTED BASED ON PROBABILITIES
@@ -210,3 +218,18 @@ def predict_text_language(text):
             print(f"Lang Detected:", src_lang)
             return src_lang
     return src_lang
+
+
+def predict_text_language_lingua(text):
+    """
+    Predicts the language of the given text with lingua model (very accurate for short and mixed texts),
+    The detection is made based on the included languages in the COMMON_LANGUAGES_LINGUA list
+    If no language was detected, then english will be the default language returned
+    :param text: the text from which we predict the language
+    :return: the predicted language
+    """
+    # FIND THE LANGUAGE WITH LINGUA
+    detected_language = detector.detect_language_of(text)
+    if detected_language is None:
+        return 'eng'
+    return detected_language.iso_code_639_3.name.lower()

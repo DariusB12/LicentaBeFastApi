@@ -9,7 +9,10 @@ from service.yolo_services.yolo_utils import base64_to_cv2_img, parse_number, cv
 
 yolo_model_profile = YOLO(
     'ai_models/yolov11/insta_profile_model/800px_no_augmentation batch 16 kaggle/weights/best.pt')
-yolo_model_post = YOLO("ai_models/yolov11/insta_post_model/800px_no_augmentation_batch16_kaggle/weights/best.pt")
+# yolo_model_post = YOLO("ai_models/yolov11/insta_post_model/800px_no_augmentation_batch16_kaggle/weights/best.pt")
+yolo_model_post = YOLO("ai_models/yolov11/insta_post_model/800px_no_augmentation_batch8_kaggle/weights/best.pt")
+
+
 
 # DICTIONARY WITH CLASS INDEXES AS KEYS AND LABEL NAMES AS VALUES
 class_names_labels_profile = yolo_model_profile.names
@@ -123,8 +126,10 @@ def detect_from_post_capture(image_base64):
 
     # Normalized date text
     if text_boxes.get('date') is not None:
+        print('date not parsed:', text_boxes['date']['text'])
         parsed_date = parse_posts_date(text_boxes['date']['text'])
         if parsed_date is not None:
+            print('date parsed:',parsed_date)
             date = parsed_date
     # print("date:", date)
 

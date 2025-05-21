@@ -9,5 +9,5 @@ class PostDetectionResponse(BaseModel):
     description: str | None
     no_likes: int | None
     no_comments: int | None
-    date: str | None  # THE IMAGE IS REPRESENTED AS base64
+    date: str | None
     comments: list

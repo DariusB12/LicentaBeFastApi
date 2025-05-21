@@ -70,6 +70,8 @@ def detect_post_data(body: PostDetectionRequest, user: User = Depends(verify_tok
     # print("image received:", body.image)
     post_photo, description, no_likes, no_comments, date,comments = detect_from_post_capture(body.image)
 
+    date_iso_format = date.isoformat()if date else None
+    print('date iso format:',date_iso_format)
     response = PostDetectionResponse(
         post_photo=post_photo,
         description=description,

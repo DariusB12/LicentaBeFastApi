@@ -5,7 +5,8 @@ import cv2
 import pytesseract
 
 from service.yolo_services.yolo_utils import COMMON_LANGUAGES, languages_list_to_tesseract_lang, normalize_text, \
-    denoise_text_for_language_analysis, predict_text_language
+    denoise_text_for_language_analysis, predict_text_language_fasttext_lid218, MAX_CHARACTERS_LENGTH_LINGUA, \
+    predict_text_language_lingua
 
 
 def extract_post_data(image, image_results, class_names):
@@ -118,7 +119,7 @@ def detect_comments_text_with_specified_language(comments_boxes):
         (with which the comment was detected with) and the text extracted without language specified in tesseract model
         :param comments_boxes: list with dictionaries with the image and text associated with the comment
         list: [{'image':image, 'text':text},{'image':image, 'text':text},{'image':image, 'text':text}...]
-        :return: list with all the detected comments ['comm1','comm2','comm3','comm4',...]
+        :return: list with all the detected comments with specified language ['comm1','comm2','comm3','comm4',...]
         """
     if len(comments_boxes) == 0:
         return []
@@ -129,12 +130,16 @@ def detect_comments_text_with_specified_language(comments_boxes):
             # the language detection is made only on the comment text (without the username of the user's account)
             comment_without_username = ' '.join(box['text'].split()[1:])
             if len(comment_without_username) > 0:
-                # print("non accurate text:", comment_without_username)
-                # print("denoised text for language detection:",
-                #       denoise_text_for_language_analysis(comment_without_username))
-                # DETECT THE LANGUAGE OF THE TEXT
-                src_lang = predict_text_language(denoise_text_for_language_analysis(comment_without_username))
-                print(f"Lang Detected for comment':", src_lang)
+                comment_without_username_denoised = denoise_text_for_language_analysis(comment_without_username)
+                # VERIFY IF IT IS A SHORT/LONG TEXT
+                if len(comment_without_username_denoised) <= MAX_CHARACTERS_LENGTH_LINGUA:
+                    # DETECT THE LANGUAGE WITH LINGUA
+                    src_lang = predict_text_language_lingua(comment_without_username_denoised)
+                    print(f"Lang lingua for comment':", src_lang)
+                else:
+                    # DETECT THE LANGUAGE WITH lid218
+                    src_lang = predict_text_language_fasttext_lid218(comment_without_username_denoised)
+                    print(f"Lang lid218 for comment':", src_lang)
 
                 # DETECTS AGAIN THE TEXT WITH SPECIFIED LANGUAGE (BETTER ACCURACY)
                 gray = cv2.cvtColor(box['image'], cv2.COLOR_BGR2GRAY)

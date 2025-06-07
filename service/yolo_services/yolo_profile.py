@@ -1,9 +1,9 @@
 import cv2
 from pytesseract import pytesseract
 
-from service.yolo_services.yolo_utils import normalize_text, \
-    COMMON_LANGUAGES, predict_text_language_fasttext_lid218, languages_list_to_tesseract_lang, \
-    denoise_text_for_language_analysis, MAX_CHARACTERS_LENGTH_LINGUA, predict_text_language_lingua
+from service.utils.yolo_utils import languages_list_to_tesseract_lang
+from service.utils.lang_utils import normalize_text, COMMON_LANGUAGES, predict_text_language_fasttext_lid218, \
+    normalize_text_for_language_analysis, MAX_CHARACTERS_LENGTH_LINGUA, predict_text_language_lingua
 
 
 def extract_profile_data(image, image_results, class_names):
@@ -105,7 +105,7 @@ def detect_description_text_with_specified_language(description_boxes):
         description_without_username = ' '.join(description_boxes['text'].split()[1:])
         if len(description_without_username) > 0:
             print("non accurate text:", description_without_username)
-            description_without_username_denoised = denoise_text_for_language_analysis(description_without_username)
+            description_without_username_denoised = normalize_text_for_language_analysis(description_without_username)
             print("denoised text for language detection:", description_without_username_denoised)
             # VERIFY IF IT IS A SHORT/LONG TEXT
             if len(description_without_username_denoised) <= MAX_CHARACTERS_LENGTH_LINGUA:

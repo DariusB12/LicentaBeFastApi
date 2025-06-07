@@ -5,7 +5,7 @@ from ultralytics import YOLO
 from service.yolo_services.yolo_posts import extract_post_data, detect_comments_text_with_specified_language, \
     parse_posts_date
 from service.yolo_services.yolo_profile import extract_profile_data, detect_description_text_with_specified_language
-from service.yolo_services.yolo_utils import base64_to_cv2_img, parse_number, cv2_img_to_base64
+from service.utils.yolo_utils import base64_to_cv2_img, parse_number, cv2_img_to_base64
 
 yolo_model_profile = YOLO(
     'ai_models/yolov11/insta_profile_model/800px_no_augmentation batch 16 kaggle/weights/best.pt')

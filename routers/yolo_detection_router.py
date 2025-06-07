@@ -28,7 +28,9 @@ def detect_profile_data(body: ProfileDetectionRequest, user: User = Depends(veri
     :param user: used as dependency for token validation
     :return: ProfileDetectionResponse containing all the data detected in the provided image, the profile photo
     will be sent in base64 format (because the user can change the photo in the frontend app if he wants)
+
     Throws 400 BAD_REQUEST if the image encoded in base64 doesn't represent a valid image
+    Throws CustomHTTPException 403 FORBIDDEN if the user doesn't exist (invalid token)
     """
     # print("image received:", body.image)
     profile_photo, username, description, followers, following, posts = detect_from_profile_capture(body.image)
@@ -65,13 +67,15 @@ def detect_post_data(body: PostDetectionRequest, user: User = Depends(verify_tok
     :param user: used as dependency for token validation
     :return: PostDetectionResponse containing all the data detected in the provided image, the post photo
     will be sent in base64 format (because the user can change the photo in the frontend app if he wants)
+
     Throws 400 BAD_REQUEST if the image encoded in base64 doesn't represent a valid image
+    Throws CustomHTTPException 403 FORBIDDEN if the user doesn't exist (invalid token)
     """
     # print("image received:", body.image)
     post_photo, description, no_likes, no_comments, date,comments = detect_from_post_capture(body.image)
 
     date_iso_format = date.isoformat()if date else None
-    print('date iso format:',date_iso_format)
+    print('date iso format:', date_iso_format)
     response = PostDetectionResponse(
         post_photo=post_photo,
         description=description,

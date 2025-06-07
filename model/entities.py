@@ -7,8 +7,8 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
+    username = Column(String, unique=True, index=True,nullable=False)
+    hashed_password = Column(String,nullable=False)
 
 
 class SocialMediaAccount(Base):
@@ -16,11 +16,11 @@ class SocialMediaAccount(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, nullable=False)
-    profile_description = Column(String, default='')
-    no_followers = Column(Integer, default=0)
-    no_following = Column(Integer, default=0)
-    no_of_posts = Column(Integer, default=0)
-    profile_photo = Column(LargeBinary, nullable=False)  # Store base64-decoded bytes
+    profile_description = Column(String, default='',nullable=False)
+    no_followers = Column(Integer, default=0,nullable=False)
+    no_following = Column(Integer, default=0,nullable=False)
+    no_of_posts = Column(Integer, default=0,nullable=False)
+    profile_photo_path = Column(String, nullable=False)  # STORE THE PATH OF THE PROFILE PHOTO
 
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
@@ -41,7 +41,7 @@ class PostPhoto(Base):
     __tablename__ = "post_photos"
 
     id = Column(Integer, primary_key=True, index=True)
-    image_data = Column(LargeBinary, nullable=False)  # base64 image as binary
+    post_photo_path = Column(String, nullable=False)  # STORE THE PATHS OF THE PHOTOS, AND PHOTOS ARE STORED ON SYSTEM
 
     post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
 

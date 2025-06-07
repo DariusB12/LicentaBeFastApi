@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 import cv2
 import pytesseract
 
-from service.yolo_services.yolo_utils import COMMON_LANGUAGES, languages_list_to_tesseract_lang, normalize_text, \
-    denoise_text_for_language_analysis, predict_text_language_fasttext_lid218, MAX_CHARACTERS_LENGTH_LINGUA, \
-    predict_text_language_lingua
+from service.utils.yolo_utils import languages_list_to_tesseract_lang
+from service.utils.lang_utils import COMMON_LANGUAGES, normalize_text, normalize_text_for_language_analysis, \
+    predict_text_language_fasttext_lid218, MAX_CHARACTERS_LENGTH_LINGUA, predict_text_language_lingua
 
 
 def extract_post_data(image, image_results, class_names):
@@ -130,7 +130,7 @@ def detect_comments_text_with_specified_language(comments_boxes):
             # the language detection is made only on the comment text (without the username of the user's account)
             comment_without_username = ' '.join(box['text'].split()[1:])
             if len(comment_without_username) > 0:
-                comment_without_username_denoised = denoise_text_for_language_analysis(comment_without_username)
+                comment_without_username_denoised = normalize_text_for_language_analysis(comment_without_username)
                 # VERIFY IF IT IS A SHORT/LONG TEXT
                 if len(comment_without_username_denoised) <= MAX_CHARACTERS_LENGTH_LINGUA:
                     # DETECT THE LANGUAGE WITH LINGUA

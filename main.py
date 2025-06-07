@@ -1,6 +1,7 @@
 from exceptions.custom_exceptions import CustomHTTPException
 from model.entities import User
-from routers import auth_router, user_router, yolo_detection_router
+from routers import auth_router, social_accounts_router, yolo_detection_router, translate_router, \
+    social_accounts_posts_router
 from security.jwt_token import verify_token
 from fastapi import FastAPI, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
@@ -18,8 +19,10 @@ app.add_middleware(
 )
 
 app.include_router(auth_router.router)
-app.include_router(user_router.router)
+app.include_router(social_accounts_router.router)
+app.include_router(social_accounts_posts_router.router)
 app.include_router(yolo_detection_router.router)
+app.include_router(translate_router.router)
 
 
 @app.exception_handler(CustomHTTPException)

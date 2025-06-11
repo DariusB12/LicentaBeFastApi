@@ -3,6 +3,7 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta, UTC
 from fastapi import Security, status
 from exceptions.custom_exceptions import CustomHTTPException
+from logging_config import logger
 from repo.user_repo import get_user_by_username
 from dotenv import load_dotenv
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -46,6 +47,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Security(security),
 
         username: str = payload.get("sub")
         if username is None:
+            logger.error('No username present')
             # If the token doesn't contain a username
             raise CustomHTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -54,6 +56,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Security(security),
 
         user = get_user_by_username(username, db)
         if user is None:
+            logger.error("username doesn't belong to anny registered account")
             # If the username doesn't belong to anny registered account
             raise CustomHTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -61,8 +64,35 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Security(security),
             )
         return user
     except JWTError:
+        logger.error("invalid token")
         # If the token is expired decode() function automatically throws JWTError
         raise CustomHTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             message="Token invalid"
         )
+
+
+def verify_token_websocket(token: str, db: Session):
+    """
+    Function used to validate the given token
+    :return: user_id if the token is valid otherwise None
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        username: str = payload.get("sub")
+        if username is None:
+            logger.error('No username present')
+            return None
+
+        user = get_user_by_username(username, db)
+        if user is None:
+            logger.error("username doesn't belong to anny registered account")
+            # If the username doesn't belong to anny registered account
+            return None
+
+        return user.id
+    except JWTError:
+        logger.error("invalid token")
+        # If the token is expired decode() function automatically throws JWTError
+        return None

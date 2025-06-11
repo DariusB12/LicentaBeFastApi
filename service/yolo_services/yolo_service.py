@@ -2,6 +2,7 @@ import re
 
 from ultralytics import YOLO
 
+from logging_config import logger
 from service.yolo_services.yolo_posts import extract_post_data, detect_comments_text_with_specified_language, \
     parse_posts_date
 from service.yolo_services.yolo_profile import extract_profile_data, detect_description_text_with_specified_language
@@ -11,6 +12,7 @@ yolo_model_profile = YOLO(
     'ai_models/yolov11/insta_profile_model/800px_no_augmentation batch 16 kaggle/weights/best.pt')
 # yolo_model_post = YOLO("ai_models/yolov11/insta_post_model/800px_no_augmentation_batch16_kaggle/weights/best.pt")
 yolo_model_post = YOLO("ai_models/yolov11/insta_post_model/800px_no_augmentation_batch8_kaggle/weights/best.pt")
+logger.debug('YOLO MODELS LOADED')
 
 
 
@@ -35,6 +37,7 @@ def detect_from_profile_capture(image_base64):
     following = -1
     posts = -1
     """
+    logger.info('detect from profile capture')
     image_cv = base64_to_cv2_img(image_base64)
 
     # DETECT FROM IMAGE USING YOLOv11 MODEL
@@ -89,6 +92,7 @@ def detect_from_post_capture(image_base64):
     no_likes = -1
     no_comments = -1
     """
+    logger.info('detect from post capture')
 
     image_cv = base64_to_cv2_img(image_base64)
 
@@ -129,7 +133,7 @@ def detect_from_post_capture(image_base64):
         print('date not parsed:', text_boxes['date']['text'])
         parsed_date = parse_posts_date(text_boxes['date']['text'])
         if parsed_date is not None:
-            print('date parsed:',parsed_date)
+            print('date parsed:', parsed_date)
             date = parsed_date
     # print("date:", date)
 

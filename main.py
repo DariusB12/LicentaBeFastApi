@@ -1,12 +1,11 @@
 from exceptions.custom_exceptions import CustomHTTPException
-from model.entities import User
 from routers import auth_router, social_accounts_router, yolo_detection_router, translate_router, \
-    social_accounts_posts_router
-from security.jwt_token import verify_token
-from fastapi import FastAPI, Depends, Request, HTTPException
+    social_accounts_posts_router, user_router, photos_router
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware  # Import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 
+from websocket.websocket_connection import websocket_endpoint
 
 app = FastAPI()
 # Allow all origins
@@ -23,6 +22,10 @@ app.include_router(social_accounts_router.router)
 app.include_router(social_accounts_posts_router.router)
 app.include_router(yolo_detection_router.router)
 app.include_router(translate_router.router)
+app.include_router(user_router.router)
+app.include_router(photos_router.router)
+
+app.add_api_websocket_route("/ws", websocket_endpoint)
 
 
 @app.exception_handler(CustomHTTPException)
@@ -58,4 +61,5 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             "status_code": exc.status_code
         }
     )
+
 

@@ -6,6 +6,7 @@ from app_requests.translation_requests.post_translate_request import PostTransla
 from app_requests.translation_requests.profile_translate_request import ProfileTranslationRequest
 from app_responses.translation_responses.post_translate_response import PostTranslationResponse
 from app_responses.translation_responses.profile_translate_response import ProfileTranslationResponse
+from logging_config import logger
 from model.entities import User
 from security.jwt_token import verify_token
 from service.translation_service import detect_lang_and_translate_to_english, \
@@ -29,6 +30,7 @@ def translate_profile_data(profile: ProfileTranslationRequest, user: User = Depe
 
     Throws CustomHTTPException 403 FORBIDDEN if the user doesn't exist (invalid token)
     """
+    logger.info('Translate profile')
     description = detect_lang_and_translate_to_english(profile.description)
 
     response = ProfileTranslationResponse(
@@ -57,6 +59,8 @@ def translate_post_data(post: PostTranslationRequest, user: User = Depends(verif
 
     Throws CustomHTTPException 403 FORBIDDEN if the user doesn't exist (invalid token)
     """
+    logger.info('Translate post')
+
     description, comments = translate_post_to_english(post)
 
     response = PostTranslationResponse(

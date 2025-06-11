@@ -1,6 +1,7 @@
 import cv2
 from pytesseract import pytesseract
 
+from logging_config import logger
 from service.utils.yolo_utils import languages_list_to_tesseract_lang
 from service.utils.lang_utils import normalize_text, COMMON_LANGUAGES, predict_text_language_fasttext_lid218, \
     normalize_text_for_language_analysis, MAX_CHARACTERS_LENGTH_LINGUA, predict_text_language_lingua
@@ -125,6 +126,7 @@ def detect_description_text_with_specified_language(description_boxes):
                 accurate_description = accurate_text
             # print("accurate text: ", accurate_text)
     except Exception as e:
+        logger.error('prediction could not be made')
         # EXCEPTION IF THE PREDICTION COULD NOT BE MADE
         print(f"Error for description: {e}")
 

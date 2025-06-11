@@ -2,7 +2,8 @@ from sqlalchemy.orm import Session
 from starlette import status
 
 from exceptions.custom_exceptions import CustomHTTPException
-from model.entities import Post, Comment, PostPhoto
+from logging_config import logger
+from model.entities import Post, Comment, PostPhoto, User, SocialMediaAccount
 from datetime import datetime
 
 
@@ -26,6 +27,7 @@ def add_social_account_post(description, no_likes, no_comments, date_posted, com
     try:
         date_posted_dt = datetime.fromisoformat(date_posted)
     except ValueError:
+        logger.error("datePosted must be in ISO format (e.g., '2024-05-26T14:30:00')")
         raise CustomHTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             message="datePosted must be in ISO format (e.g., '2024-05-26T14:30:00')"
@@ -50,9 +52,47 @@ def add_social_account_post(description, no_likes, no_comments, date_posted, com
 
     # CREATE THE PHOTOS
     for photo_path in photos:
-        photo = PostPhoto(post_photo_path=photo_path, post_id=new_post.id)
+        photo = PostPhoto(post_photo_filename=photo_path, post_id=new_post.id)
         db.add(photo)
 
     db.commit()
 
     return new_post
+
+
+def delete_social_account_post(post_id: int, user_id: int, db: Session):
+    """
+    Delete the post from the database
+    :param user_id: the current user's id
+    :param post_id: the id of the post to delete
+    :param db: the db connection
+    :return: a list with all the photo filenames of the post to be deleted from system
+    Throws
+        -HTTP_400_BAD_REQUEST if the id of the post doesn't exist or if the post doesn't belong to the current user
+    """
+    # VERIFY THE POST BELONGS TO THE GIVEN USER
+    post = db.query(Post).join(SocialMediaAccount).join(User).filter(User.id == user_id, Post.id == post_id).first()
+
+    if not post:
+        logger.error("Post does not exist or it doesn't belong to the current user")
+        raise CustomHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message="Post does not exist or it doesn't belong to the current user"
+        )
+
+    # WE NEED TO MARK THE FIELD modified=True IN THE SOCIAL ACCOUNT OF THE DELETED POST
+    social_account = post.social_account
+    if social_account:
+        social_account.modified = True
+
+    filenames = []
+    # Posts photos
+    for photo in post.photos:
+        if photo.post_photo_filename:
+            filenames.append(photo.post_photo_filename)
+
+    db.delete(post)
+    db.commit()
+    db.flush()
+
+    return filenames

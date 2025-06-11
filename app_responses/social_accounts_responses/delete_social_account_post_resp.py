@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
 
-class AddSocialAccountPostResponse(BaseModel):
+class DeleteSocialAccountPostResponse(BaseModel):
     message: str
     status_code: int

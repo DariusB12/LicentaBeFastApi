@@ -1,5 +1,6 @@
 from app_requests.translation_requests.post_comment_translation import PostCommentTranslation
 from app_requests.translation_requests.post_translate_request import PostTranslationRequest
+from logging_config import logger
 from service.utils.lang_utils import normalize_text, MAX_CHARACTERS_LENGTH_LINGUA, predict_text_language_lingua, \
     predict_text_language_fasttext_lid218, normalize_text_for_language_analysis
 from service.utils.translation_utils import translate_text_to_english_nllb
@@ -15,6 +16,7 @@ def detect_lang_and_translate_to_english(text: str):
     :param text: text to be normalized and translated
     :return: the normalized and translated text
     """
+    logger.info('detect lang and translate')
     # NORMALIZE THE TEXT
     normalized_text = normalize_text(text)
 
@@ -42,6 +44,8 @@ def translate_post_to_english(post: PostTranslationRequest):
     :return: the description and list with all the comments translated (if after the translation a comment became empty
     then it will be removed from the list)
     """
+    logger.info('translate post')
+
     # TRANSLATES THE DESCRIPTION
     translated_description = detect_lang_and_translate_to_english(post.description)
 

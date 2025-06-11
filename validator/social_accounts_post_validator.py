@@ -4,6 +4,8 @@ from app_requests.accounts_requests.add_social_account_post_req import AddSocial
 from exceptions.custom_exceptions import CustomHTTPException
 from datetime import datetime
 
+from logging_config import logger
+
 
 def validate_social_account_post(post: AddSocialAccountPostReq):
     """
@@ -18,12 +20,14 @@ def validate_social_account_post(post: AddSocialAccountPostReq):
     throws HTTP 422 UNPROCESSABLE_ENTITY if the post is invalid
     """
     if post.noLikes is None or post.noLikes < -1:
+        logger.error("Number of likes must be equal or greater than -1")
         raise CustomHTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             message="Number of likes must be equal or greater than -1."
         )
 
     if post.noComments is None or post.noComments < -1:
+        logger.error("Number of comments must be equal or greater than -1")
         raise CustomHTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             message="Number of comments must be equal or greater than -1."
@@ -32,24 +36,28 @@ def validate_social_account_post(post: AddSocialAccountPostReq):
     try:
         datetime.strptime(post.datePosted, "%Y-%m-%d")
     except ValueError:
+        logger.error("Date must be in ISO format (YYYY-MM-DD)")
         raise CustomHTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             message="Date must be in ISO format (YYYY-MM-DD)."
         )
 
     if not isinstance(post.comments, list):
+        logger.error("Comments must be a list")
         raise CustomHTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             message="Comments must be a list."
         )
 
     if not isinstance(post.photos, list):
+        logger.error("Photos must be a list")
         raise CustomHTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             message="Photos must be a list."
         )
 
     if post.social_account_id is None or post.social_account_id < 0:
+        logger.error("Social account ID must be a positive integer")
         raise CustomHTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             message="Social account ID must be a positive integer."

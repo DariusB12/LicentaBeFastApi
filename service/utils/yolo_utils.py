@@ -4,6 +4,8 @@ import numpy as np
 from fastapi import status
 import cv2
 from exceptions.custom_exceptions import CustomHTTPException
+from logging_config import logger
+
 
 def parse_number(text):
     """
@@ -67,6 +69,7 @@ def cv2_img_to_base64(cv2_img, image_format='jpeg'):
         # Return with data URI prefix
         return f'data:image/{image_format};base64,{base64_str}'
     except Exception as e:
+        logger.error('Could not convert cv2 image to base64')
         raise CustomHTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             message="Could not convert cv2 image to base64."
@@ -101,6 +104,7 @@ def base64_to_cv2_img(base64_str):
                 message="Invalid base64 image format."
             )
     except Exception as e:
+        logger.error('Invalid base64 image format')
         raise CustomHTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             message="Invalid base64 image format."

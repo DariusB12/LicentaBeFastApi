@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 
 from app_requests.yolo_requests.post_detection_request import PostDetectionRequest
 from app_responses.yolo_responses.post_detection_response import PostDetectionResponse
+from logging_config import logger
 from model.entities import User
 from security.jwt_token import verify_token
 from app_requests.yolo_requests.profile_detection_request import ProfileDetectionRequest
@@ -32,6 +33,8 @@ def detect_profile_data(body: ProfileDetectionRequest, user: User = Depends(veri
     Throws 400 BAD_REQUEST if the image encoded in base64 doesn't represent a valid image
     Throws CustomHTTPException 403 FORBIDDEN if the user doesn't exist (invalid token)
     """
+    logger.info('Yolo detect profile')
+
     # print("image received:", body.image)
     profile_photo, username, description, followers, following, posts = detect_from_profile_capture(body.image)
 
@@ -71,6 +74,7 @@ def detect_post_data(body: PostDetectionRequest, user: User = Depends(verify_tok
     Throws 400 BAD_REQUEST if the image encoded in base64 doesn't represent a valid image
     Throws CustomHTTPException 403 FORBIDDEN if the user doesn't exist (invalid token)
     """
+    logger.info('Yolo detect post')
     # print("image received:", body.image)
     post_photo, description, no_likes, no_comments, date,comments = detect_from_post_capture(body.image)
 

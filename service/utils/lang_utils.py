@@ -2,6 +2,8 @@ import fasttext
 from lingua import Language, LanguageDetectorBuilder
 import re
 
+from logging_config import logger
+
 COMMON_LANGUAGES = ['eng', 'fra', 'spa', 'deu', 'ita', 'ron', 'por']
 COMMON_LANGUAGES_LINGUA = [Language.ENGLISH, Language.FRENCH, Language.SPANISH, Language.GERMAN, Language.ITALIAN,
                            Language.ROMANIAN, Language.PORTUGUESE]
@@ -13,6 +15,7 @@ detector = LanguageDetectorBuilder.from_languages(*COMMON_LANGUAGES_LINGUA).buil
 # LOAD THE LANGUAGE DETECTION MODEL lid218
 modelLID = fasttext.load_model(
     "ai_models/language_detection/lid218e.bin")
+logger.debug('LID218 MODEL LOADED')
 
 NON_ALPHA_TOKEN_RE = re.compile(
     # using MULTILINE so that ^ means the beginning of a line

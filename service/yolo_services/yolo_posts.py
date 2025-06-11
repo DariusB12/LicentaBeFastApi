@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import cv2
 import pytesseract
 
+from logging_config import logger
 from service.utils.yolo_utils import languages_list_to_tesseract_lang
 from service.utils.lang_utils import COMMON_LANGUAGES, normalize_text, normalize_text_for_language_analysis, \
     predict_text_language_fasttext_lid218, MAX_CHARACTERS_LENGTH_LINGUA, predict_text_language_lingua
@@ -149,6 +150,7 @@ def detect_comments_text_with_specified_language(comments_boxes):
                     accurate_comments.append(accurate_text)
                 print("comment with lang text: ", accurate_text)
         except Exception as e:
+            logger.error('prediction could not be made')
             # EXCEPTION IF THE PREDICTION COULD NOT BE MADE
             print(f"Error for comment: {e}")
 

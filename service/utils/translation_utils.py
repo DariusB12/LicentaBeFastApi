@@ -3,10 +3,12 @@ import re
 import ctranslate2
 import transformers
 
+from logging_config import logger
 from service.utils.lang_utils import COMMON_LANGUAGES
 
 # LOAD THE NLLB MODEL
 translator = ctranslate2.Translator("ai_models/nllb/nllb-200-distilled-600M-ctranslate2", device='cuda')
+logger.debug('NLLB LOADED')
 
 # load all the tokenizers for all the languages when starting the app, in order to cut down on waiting time
 tokenizers_dict = {
@@ -31,6 +33,7 @@ tokenizers_dict = {
     'eng': transformers.AutoTokenizer.from_pretrained("ai_models/nllb/nllb-200-distilled-600M-ctranslate2",
                                                       src_lang='eng_Latn')
 }
+logger.debug('TOKENIZERS LOADED')
 
 
 def split_sentences(text):

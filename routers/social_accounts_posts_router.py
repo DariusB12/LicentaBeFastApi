@@ -4,14 +4,18 @@ from fastapi.responses import JSONResponse
 
 from app_requests.accounts_requests.add_social_account_post_req import AddSocialAccountPostReq
 from app_requests.accounts_requests.add_social_account_req import AddSocialAccountReq
+from app_requests.accounts_requests.update_social_account_post_req import UpdateSocialAccountPostReq
 from app_responses.social_accounts_responses.add_social_account_post_resp import AddSocialAccountPostResponse, \
     AddSocialAccountPostNotify, PostComment, PostPhoto
 from app_responses.social_accounts_responses.add_social_account_resp import AddSocialAccountResponse
 from app_responses.social_accounts_responses.delete_social_account_post_resp import DeleteSocialAccountPostResponse
+from app_responses.social_accounts_responses.update_social_account_post_resp import UpdateSocialAccountPostResponse, \
+    UpdateSocialAccountPostNotify, PostCommentUpdate, PostPhotoUpdate
 from database_connection.database import get_db
 from logging_config import logger
 from security.jwt_token import verify_token
-from service.social_accounts_posts_service import add_social_account_post_service, delete_social_account_post_service
+from service.social_accounts_posts_service import add_social_account_post_service, delete_social_account_post_service, \
+    update_social_account_post_service
 from service.social_accounts_service import add_social_account_service
 from sqlalchemy.orm import Session
 
@@ -31,11 +35,14 @@ async def add_new_social_account_post(body: AddSocialAccountPostReq, user=Depend
     :param db: the db connection
     :return: HTTP 200OK if the post was created
 
-    Throws HTTP 422 Unprocessable Content if the post is invalid
-    Throws HTTP 403 FORBIDDEN if the user doesn't exist (invalid token)
+    Throws
+        -HTTP 422 Unprocessable Content if the post is invalid
+        -HTTP 403 FORBIDDEN if the user doesn't exist (invalid token)
+        -HTTP 400 BAD_REQUEST if trying to add post to a social account that doesn't exist
+                                    or doesn't belong to the current user
     """
     logger.info('Adding new post')
-    added_post = add_social_account_post_service(body, db)
+    added_post = add_social_account_post_service(body, user.id, db)
 
     post_comments = []
     post_photos = []
@@ -102,55 +109,58 @@ async def delete_social_account_post_api(post_id: int, user=Depends(verify_token
 
 
 @router.put("/update")
-async def update_new_social_account_post(body: AddSocialAccountPostReq, user=Depends(verify_token),
-                                      db: Session = Depends(get_db)):
+async def update_social_account_post_api(body: UpdateSocialAccountPostReq, user=Depends(verify_token),
+                                         db: Session = Depends(get_db)):
     """
-    Adds the post of the given social account id to the database
+    Updates the given post
     :param body: the request with the post
     :param user: for validating the token
     :param db: the db connection
-    :return: HTTP 200OK if the post was created
-
-    Throws HTTP 422 Unprocessable Content if the post is invalid
-    Throws HTTP 403 FORBIDDEN if the user doesn't exist (invalid token)
+    :return: HTTP 200OK if the post was updated successfully
+    Throws
+        -HTTP 422 Unprocessable Content if the post is invalid
+        -HTTP 400 BAD_REQUEST if the post doesn't belong to the current user
+                                if the post doesn't exist
+                                if the date of the post could not be parsed
+        -HTTP 403 FORBIDDEN if the user doesn't exist (invalid token)
     """
-    #TODO: FUNCTIE DE UPDATE SOCIAL ACCOUNT, CAND SE FACE NOTIFY CU WEBSOCKET PE FRONTEND MODIFIED = TRUE
-    logger.info('Adding new post')
-    added_post = add_social_account_post_service(body, db)
+    logger.info('Updating post')
+
+    updated_post = update_social_account_post_service(body, user.id, db)
 
     post_comments = []
     post_photos = []
 
-    for comment in added_post.comments:
-        post_comments.append(PostComment(
+    for comment in updated_post.comments:
+        post_comments.append(PostCommentUpdate(
             id=comment.id,
             comment=comment.content
         ))
 
-    for photo in added_post.photos:
-        post_photos.append(PostPhoto(
+    for photo in updated_post.photos:
+        post_photos.append(PostPhotoUpdate(
             id=photo.id,
             photo_filename=photo.post_photo_filename
         ))
 
-    notify_added_account = AddSocialAccountPostNotify(
-        id=added_post.id,
-        description=added_post.description,
-        no_likes=added_post.noLikes,
-        no_comments=added_post.noComments,
-        date_posted=added_post.datePosted.isoformat(),
+    notify_updated_account = UpdateSocialAccountPostNotify(
+        id=updated_post.id,
+        description=updated_post.description,
+        no_likes=updated_post.noLikes,
+        no_comments=updated_post.noComments,
+        date_posted=updated_post.datePosted.isoformat(),
 
         comments=post_comments,
         photos=post_photos,
-        profileId=added_post.social_account_id
+        profileId=updated_post.social_account_id
     )
 
-    response = AddSocialAccountPostResponse(
-        message="Post added successfully",
+    response = UpdateSocialAccountPostResponse(
+        message="Post updated successfully",
         status_code=200,
     )
 
-    # NOTIFY WITH WS THE OTHER DISPOSITIVE THAT THIS POST HAS BEEN ADDED
-    await notify_client(user.id, notify_added_account.dict(), WebsocketType.POST_ADDED)
+    # NOTIFY WITH WS THE OTHER DISPOSITIVE THAT THIS POST HAS BEEN UPDATED
+    await notify_client(user.id, notify_updated_account.dict(), WebsocketType.POST_EDITED)
 
     return JSONResponse(status_code=200, content=response.dict())

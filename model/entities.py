@@ -1,6 +1,56 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from database_connection.database import Base
+from sqlalchemy.types import TypeDecorator, TEXT
+import json
+
+from model.enums.BigFiveModelType import BigFiveModelType
+from model.enums.GeneralEmotionType import GeneralEmotionType
+from model.enums.HobbyType import HobbyType
+from model.enums.InterestDomainType import InterestDomainType
+from model.enums.PersonalityType import PersonalityType
+
+
+class JSONEncodedList(TypeDecorator):
+    """
+    Encoding/Decoding JSON for lists of enums
+    """
+    impl = TEXT
+
+    def __init__(self, enum_class, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.enum_class = enum_class
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        return json.dumps([item.value for item in value])
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return [self.enum_class(item) for item in json.loads(value)]
+
+
+class JSONEncodedEnumKeyDict(TypeDecorator):
+    """
+    Encoding/Decoding JSON for dictionaries with enums as keys
+    """
+    impl = TEXT
+
+    def __init__(self, enum_class, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.enum_class = enum_class
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        return json.dumps({k.value: v for k, v in value.items()})
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return {self.enum_class(k): v for k, v in json.loads(value).items()}
 
 
 class User(Base):
@@ -30,6 +80,15 @@ class SocialMediaAccount(Base):
 class Analysis(Base):
     __tablename__ = "analysis"
     id = Column(Integer, primary_key=True, index=True)
+
+    interest_domains = Column(JSONEncodedList(InterestDomainType))
+    hobbies = Column(JSONEncodedList(HobbyType))
+
+    general_emotions = Column(JSONEncodedEnumKeyDict(GeneralEmotionType))
+    personality_types = Column(JSONEncodedEnumKeyDict(PersonalityType))
+    big_five_model = Column(JSONEncodedEnumKeyDict(BigFiveModelType))
+
+    creationDate = Column(DateTime, nullable=False)
 
     social_account_id = Column(Integer, ForeignKey("social_media_accounts.id"), unique=True, nullable=False)
 

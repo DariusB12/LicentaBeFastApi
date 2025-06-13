@@ -1,4 +1,6 @@
 import logging
+import sys
+
 import colorlog
 
 """
@@ -11,10 +13,10 @@ handler_console = colorlog.StreamHandler()
 handler_console.setFormatter(colorlog.ColoredFormatter(
     '%(log_color)s%(asctime)s - %(levelname)s - [%(module)s.%(funcName)s:%(lineno)d] - %(message)s',
     log_colors={
-        'DEBUG':    'cyan',
-        'INFO':     'green',
-        'WARNING':  'yellow',
-        'ERROR':    'red',
+        'DEBUG': 'cyan',
+        'INFO': 'green',
+        'WARNING': 'yellow',
+        'ERROR': 'red',
         'CRITICAL': 'bold_red',
     }
 ))

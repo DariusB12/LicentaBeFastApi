@@ -9,7 +9,6 @@ from logging_config import logger
 from model.entities import Post
 from repo.social_account_post_repo import add_social_account_post, delete_social_account_post, \
     update_social_account_post
-from repo.social_account_repo import mark_social_account_as_modified
 from service.utils.photos_utils import save_profile_photo
 from validator.social_accounts_post_validator import validate_social_account_post_add, \
     validate_social_account_post_update

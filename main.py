@@ -1,6 +1,6 @@
 from exceptions.custom_exceptions import CustomHTTPException
 from routers import auth_router, social_accounts_router, yolo_detection_router, translate_router, \
-    social_accounts_posts_router, user_router, photos_router
+    social_accounts_posts_router, user_router, photos_router, analysis_router
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,6 +24,7 @@ app.include_router(yolo_detection_router.router)
 app.include_router(translate_router.router)
 app.include_router(user_router.router)
 app.include_router(photos_router.router)
+app.include_router(analysis_router.router)
 
 app.add_api_websocket_route("/ws", websocket_endpoint)
 

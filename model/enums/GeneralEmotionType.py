@@ -1,6 +1,7 @@
 from enum import Enum
 
 
+# ADD str TO ENUM SO PYDANTIC KNOWS HOW TO CONVERT A JSON FORMAT TO THIS ENUM
 class GeneralEmotionType(str, Enum):
     SAD = "SAD"
     HAPPY = "HAPPY"

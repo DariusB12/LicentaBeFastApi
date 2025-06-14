@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 
 from app_requests.accounts_requests.add_social_account_req import AddSocialAccountReq
 from app_requests.accounts_requests.update_social_account_req import UpdateSocialAccountReq
-from app_responses.social_accounts_responses.get_social_account_resp import SocialAccountFull, PostFull, AnalysisFull, \
+from app_responses.social_accounts_responses.get_social_account_resp import SocialAccountFull, PostFull, \
     PostPhotoFull, CommentFull
 from logging_config import logger
+from model.AnalysisDTO import AnalysisDTO
 from model.entities import Post, SocialMediaAccount
 
 from repo.social_account_repo import add_social_account, delete_social_account, get_user_social_account, \
@@ -46,7 +47,7 @@ def add_social_account_service(social_account: AddSocialAccountReq, user_id: int
     return social_acc_created
 
 
-def delete_social_account_service(social_account_id: int,user_id: int, db: Session):
+def delete_social_account_service(social_account_id: int, user_id: int, db: Session):
     """
     Delete the social account based on the given id and deletes all the photos of the account from the system
     :param user_id: the id of the current user
@@ -57,7 +58,7 @@ def delete_social_account_service(social_account_id: int,user_id: int, db: Sessi
     """
     logger.info(f"delete social account, id:{social_account_id}")
 
-    filenames = delete_social_account(social_account_id,user_id, db)
+    filenames = delete_social_account(social_account_id, user_id, db)
 
     for filename in filenames:
         try:
@@ -116,8 +117,18 @@ def get_user_social_account_full_entity(social_account_id: int, user_username: s
         # THE ACCOUNT DOESN'T HAVE AN ANALYSIS
         analysis_full = None
     else:
-        analysis_full = AnalysisFull(
-            id=0
+        analysis_full = AnalysisDTO(
+            id=social_account_db.analysis.id,
+            interest_domains=social_account_db.analysis.interest_domains,
+            hobbies=social_account_db.analysis.hobbies,
+
+            general_emotions=social_account_db.analysis.general_emotions,
+            personality_types=social_account_db.analysis.personality_types,
+            big_five_model=social_account_db.analysis.big_five_model,
+
+            creationDate=social_account_db.analysis.creationDate.isoformat(),
+
+            social_account_id=social_account_db.analysis.social_account_id
         )
 
     social_account = SocialAccountFull(

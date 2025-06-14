@@ -16,7 +16,6 @@ from logging_config import logger
 from security.jwt_token import verify_token
 from service.social_accounts_posts_service import add_social_account_post_service, delete_social_account_post_service, \
     update_social_account_post_service
-from service.social_accounts_service import add_social_account_service
 from sqlalchemy.orm import Session
 
 from websocket.websocket_connection import notify_client

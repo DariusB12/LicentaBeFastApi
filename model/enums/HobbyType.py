@@ -1,6 +1,8 @@
 from enum import Enum
 
 
+# ADD str TO ENUM SO PYDANTIC KNOWS HOW TO CONVERT A JSON FORMAT TO THIS ENUM
+
 class HobbyType(str, Enum):
     RUNNING = "RUNNING"
     GYM = "GYM"

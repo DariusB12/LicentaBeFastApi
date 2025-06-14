@@ -2,9 +2,7 @@ from typing import List
 
 from pydantic import BaseModel
 
-
-class AnalysisFull(BaseModel):
-    id: int
+from model.AnalysisDTO import AnalysisDTO
 
 
 class PostPhotoFull(BaseModel):
@@ -38,7 +36,7 @@ class SocialAccountFull(BaseModel):
     modified: bool
 
     posts: List[PostFull]
-    analysis: AnalysisFull | None
+    analysis: AnalysisDTO | None
 
 
 class GetSocialAccountResponse(BaseModel):

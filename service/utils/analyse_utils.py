@@ -132,6 +132,8 @@ def parse_analysis_json_response(response: str, social_account_id: int) -> Analy
         # PARSE THE JSON STRING INTO A PYTHON DICTIONARY
         parsed_data: Dict[str, Any] = json.loads(json_string_clean)
 
+        parsed_data["id"] = '0'
+
         # FILTER THE VALUES FORM JSON SO THAT ONLY THE VALUES PRESENT IN THE ENUMS ARE TAKEN
 
         # Filter interest_domains (List of Strings)

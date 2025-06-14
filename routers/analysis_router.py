@@ -7,12 +7,14 @@ from app_responses.analysis.make_analysis_social_account_resp import MakeAnalysi
 from database_connection.database import get_db
 from security.jwt_token import verify_token
 from service.analysis_service import make_social_account_analysis
+from websocket.websocket_connection import notify_client
+from websocket.ws_types import WebsocketType
 
 router = APIRouter(prefix="/analysis", tags=["AnalysisAPI"])
 
 
 @router.post("/analyse/{social_account_id}")
-def analyse_social_account(social_account_id: int, user=Depends(verify_token), db: Session = Depends(get_db)):
+async def analyse_social_account(social_account_id: int, user=Depends(verify_token), db: Session = Depends(get_db)):
     """
     Analyse the social media account
     :param social_account_id: the social media account id
@@ -30,11 +32,13 @@ def analyse_social_account(social_account_id: int, user=Depends(verify_token), d
 
     analysis = make_social_account_analysis(social_account_id, user.username, db)
 
-    # TODO: NOTIFY ANALYSIS MADE
+    # NOTIFY WITH WS THE OTHER DISPOSITIVE THAT THIS ANALYSIS WAS MADE
+    await notify_client(user.id, analysis.dict(), WebsocketType.ANALYSIS_MADE)
+
     response = MakeAnalysisSocialAccountResponse(
         message="Analysis made successfully",
         status_code=200,
+        analysis=analysis
     )
 
-    # return JSONResponse(status_code=200, content=response.dict())
-    return JSONResponse(status_code=200, content=analysis.dict())
+    return JSONResponse(status_code=200, content=response.dict())

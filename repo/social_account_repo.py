@@ -150,7 +150,7 @@ def add_social_account_analysis_repo(analysis: AnalysisDTO, username: str, db: S
     :param username: the current user username
     :param analysis: the analysis to be added
     :param db: the db connection
-    :return: None
+    :return: the id of the created analysis
     Throws
         -HTTP 400 BAD_REQUEST if the social account does not exist
                                 or if it doesn't belong to the current user
@@ -195,3 +195,5 @@ def add_social_account_analysis_repo(analysis: AnalysisDTO, username: str, db: S
     db.add(analysis_db_entity)
     db.commit()
     db.refresh(analysis_db_entity)  # Optional: refresh to get any generated IDs if needed
+
+    return analysis_db_entity.id

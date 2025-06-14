@@ -120,6 +120,7 @@ def make_social_account_analysis(social_account_id: int, username: str, db: Sess
 
     analysis = analyse_social_account(social_account)
 
-    add_social_account_analysis_repo(analysis, username, db)
+    analysis_id = add_social_account_analysis_repo(analysis, username, db)
+    analysis.id = analysis_id
 
     return analysis

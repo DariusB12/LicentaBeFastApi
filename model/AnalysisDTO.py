@@ -10,6 +10,7 @@ from model.enums.PersonalityType import PersonalityType
 
 
 class AnalysisDTO(BaseModel):
+    id: int
     interest_domains: List[InterestDomainType]
     hobbies: List[HobbyType]
 

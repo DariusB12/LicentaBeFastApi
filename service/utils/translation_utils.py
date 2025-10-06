@@ -7,7 +7,7 @@ from logging_config import logger
 from service.utils.lang_utils import COMMON_LANGUAGES
 
 # LOAD THE NLLB MODEL
-translator = ctranslate2.Translator("ai_models/nllb/nllb-200-distilled-600M-ctranslate2", device='cuda')
+translator = ctranslate2.Translator("ai_models/nllb/nllb-200-distilled-600M-ctranslate2", device='cpu')
 logger.debug('NLLB LOADED')
 
 # load all the tokenizers for all the languages when starting the app, in order to cut down on waiting time

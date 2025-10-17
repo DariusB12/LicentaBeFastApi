@@ -1,0 +1,163 @@
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi.responses import JSONResponse
+
+from src.app_requests.accounts_requests.add_social_account_post_req import AddSocialAccountPostReq
+from src.app_requests.accounts_requests.update_social_account_post_req import UpdateSocialAccountPostReq
+from src.app_responses.social_accounts_responses.add_social_account_post_resp import AddSocialAccountPostResponse, \
+    AddSocialAccountPostNotify, PostComment, PostPhoto
+from src.app_responses.social_accounts_responses.delete_social_account_post_resp import DeleteSocialAccountPostResponse
+from src.app_responses.social_accounts_responses.update_social_account_post_resp import UpdateSocialAccountPostResponse, \
+    UpdateSocialAccountPostNotify, PostCommentUpdate, PostPhotoUpdate
+from src.database_connection.database import get_db
+from src.logging_config import logger
+from src.security.jwt_token import verify_token
+from src.service.social_accounts_posts_service import add_social_account_post_service, delete_social_account_post_service, \
+    update_social_account_post_service
+from sqlalchemy.orm import Session
+
+from src.websocket.websocket_connection import notify_client
+from src.websocket.ws_types import WebsocketType
+
+router = APIRouter(prefix="/posts", tags=["postsApi"])
+
+
+@router.post("/add")
+async def add_new_social_account_post(body: AddSocialAccountPostReq, user=Depends(verify_token),
+                                      db: Session = Depends(get_db)):
+    """
+    Adds the post of the given social account id to the database
+    :param body: the request with the post
+    :param user: for validating the token
+    :param db: the db connection
+    :return: HTTP 200OK if the post was created
+
+    Throws
+        -HTTP 422 Unprocessable Content if the post is invalid
+        -HTTP 403 FORBIDDEN if the user doesn't exist (invalid token)
+        -HTTP 400 BAD_REQUEST if trying to add post to a social account that doesn't exist
+                                    or doesn't belong to the current user
+    """
+    logger.info('Adding new post')
+    added_post = add_social_account_post_service(body, user.id, db)
+
+    post_comments = []
+    post_photos = []
+
+    for comment in added_post.comments:
+        post_comments.append(PostComment(
+            id=comment.id,
+            comment=comment.content
+        ))
+
+    for photo in added_post.photos:
+        post_photos.append(PostPhoto(
+            id=photo.id,
+            photo_filename=photo.post_photo_filename
+        ))
+
+    notify_added_account = AddSocialAccountPostNotify(
+        id=added_post.id,
+        description=added_post.description,
+        no_likes=added_post.noLikes,
+        no_comments=added_post.noComments,
+        date_posted=added_post.datePosted.isoformat(),
+
+        comments=post_comments,
+        photos=post_photos,
+        profileId=added_post.social_account_id
+    )
+
+    response = AddSocialAccountPostResponse(
+        message="Post added successfully",
+        status_code=200,
+    )
+
+    # NOTIFY WITH WS THE OTHER DISPOSITIVE THAT THIS POST HAS BEEN ADDED
+    await notify_client(user.id, notify_added_account.dict(), WebsocketType.POST_ADDED)
+
+    return JSONResponse(status_code=200, content=response.dict())
+
+
+@router.delete("/{post_id}")
+async def delete_social_account_post_api(post_id: int, user=Depends(verify_token), db: Session = Depends(get_db)):
+    """
+    Deletes the post based on the given id
+    :param post_id: the id of the post to be deleted
+    :param user: for validating the token
+    :param db: the db connection
+    :return: HTTP 200OK if the post was deleted
+    Throws
+            -HTTP 400 BAD_REQUEST if the post doesn't belong to the current user or if the post doesn't exist
+            -HTTP 403 FORBIDDEN if token is invalid
+    """
+    logger.info('Deleting post')
+    delete_social_account_post_service(post_id, user.id, db)
+
+    response = DeleteSocialAccountPostResponse(
+        message="Post deleted successfully",
+        status_code=200,
+    )
+
+    # NOTIFY WITH WS THE OTHER DISPOSITIVE THAT THIS SOCIAL ACCOUNT POST HAS BEEN DELETED
+    await notify_client(user.id, post_id, WebsocketType.POST_DELETED)
+
+    return JSONResponse(status_code=200, content=response.dict())
+
+
+@router.put("/update")
+async def update_social_account_post_api(body: UpdateSocialAccountPostReq, user=Depends(verify_token),
+                                         db: Session = Depends(get_db)):
+    """
+    Updates the given post
+    :param body: the request with the post
+    :param user: for validating the token
+    :param db: the db connection
+    :return: HTTP 200OK if the post was updated successfully
+    Throws
+        -HTTP 422 Unprocessable Content if the post is invalid
+        -HTTP 400 BAD_REQUEST if the post doesn't belong to the current user
+                                if the post doesn't exist
+                                if the date of the post could not be parsed
+        -HTTP 403 FORBIDDEN if the user doesn't exist (invalid token)
+    """
+    logger.info('Updating post')
+
+    updated_post = update_social_account_post_service(body, user.id, db)
+
+    post_comments = []
+    post_photos = []
+
+    for comment in updated_post.comments:
+        post_comments.append(PostCommentUpdate(
+            id=comment.id,
+            comment=comment.content
+        ))
+
+    for photo in updated_post.photos:
+        post_photos.append(PostPhotoUpdate(
+            id=photo.id,
+            photo_filename=photo.post_photo_filename
+        ))
+
+    notify_updated_account = UpdateSocialAccountPostNotify(
+        id=updated_post.id,
+        description=updated_post.description,
+        no_likes=updated_post.noLikes,
+        no_comments=updated_post.noComments,
+        date_posted=updated_post.datePosted.isoformat(),
+
+        comments=post_comments,
+        photos=post_photos,
+        profileId=updated_post.social_account_id
+    )
+
+    response = UpdateSocialAccountPostResponse(
+        message="Post updated successfully",
+        status_code=200,
+    )
+
+    # NOTIFY WITH WS THE OTHER DISPOSITIVE THAT THIS POST HAS BEEN UPDATED
+    await notify_client(user.id, notify_updated_account.dict(), WebsocketType.POST_EDITED)
+
+    return JSONResponse(status_code=200, content=response.dict())
